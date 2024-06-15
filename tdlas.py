@@ -34,8 +34,15 @@ concentration = 10**(-5) # mols per cm^3
 
 
 def wavelength_DFP(current):
-    """Returns the wavelength the laser emits given a current"""
-    return 759 + 2 * current / 0.005 # nm
+    """Returns the wavelength distribution the laser emits given a current"""
+
+    center = 759 + 2 * current / 0.005
+    variance = 0.01 #"Linewidth of the laser"
+
+    wavelength = np.linspace(center-0.05, center+0.05, 50)
+    intensity = 1/sqrt(2*np.pi)/variance * np.exp(-(wavelength-center)**2/variance**2/2)
+
+    return (intensity, wavelength)
 
 # Absorption coefficient, make function from absorption
 nu, coef = absorptionCoefficient_Lorentz(SourceTables=compound, Diluent={'air':1.0})
@@ -44,9 +51,13 @@ ll = 10 ** 7 / nu
 get_absorption_coefficient = scipy.interpolate.interp1d(ll, coef)
 
 
-def gas_absorption(wavelength, L, c):
+def gas_absorption(wavelength_distibution, L, c):
     """Returns how much light is transmitted I / I_0."""
-    return exp(-get_absorption_coefficient(wavelength) * L * c * A)
+    (intensity, wavelength) = wavelength_distibution
+    absorbed_intensity = intensity * exp(-get_absorption_coefficient(wavelength) * L * c * A)
+    total_intensity = scipy.integrate.simpson(absorbed_intensity, x=wavelength)
+    
+    return total_intensity
     
 
 def get_detection(current):
@@ -56,11 +67,14 @@ def get_detection(current):
 
 # Driving current
 threshold_current = 0.05
+
 # Sawtooth wave
 t = np.linspace(0,1,500)
-driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 5 * t))
+driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 3 * t))
 
-v = get_detection(driving_current)
+# Measured voltage
+v = np.array([get_detection(current) for current in driving_current])
+
 
 #plt.plot(t, driving_current)
 plt.plot(t, v)
