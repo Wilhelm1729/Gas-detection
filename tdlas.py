@@ -48,13 +48,14 @@ def get_absorption_coefficient(l):
 
 def gas_absorption(wavelength, L, c):
     """Returns the absortion I / I_0."""
-    return exp(get_absorption_coefficient(wavelength) * L * c * A)
+    return exp(-get_absorption_coefficient(wavelength) * L * c * A)
     
 
 def get_detection(current):
     k = 1 # Constant voltage is proportional to measured intensity
     return k * gas_absorption(wavelength_DFP(current), path, concentration)
 
+"""
 t = np.linspace(0,1,1000)
 driving_current = 0.005 * scipy.signal.sawtooth(2 * np.pi * 5 * t)
 v = get_detection(driving_current)
@@ -62,7 +63,12 @@ v = get_detection(driving_current)
 plt.plot(t, driving_current)
 plt.plot(t, v)
 plt.show()
+"""
 
+l = np.linspace(750,770)
+i = gas_absorption(l, path, concentration)
+plt.plot(l,i)
+plt.show()
 
 
 def plot_absortion(l_min, l_max):
@@ -81,5 +87,6 @@ def plot_absortion(l_min, l_max):
     l = 10 ** 8 / nu
     plt.plot(nu, coef)
     plt.show()
+
 
 
