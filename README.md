@@ -4,8 +4,6 @@
 
 ### Example
 
-### Modules
-
 ### Constants
 
 ### Details for all of the parameters:
