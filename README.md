@@ -1,12 +1,8 @@
-# Gas sensing v.1.0 (gassensing.py)
-
-## Presenting gas sensing API
+# Exhaled gas detection technology based on laser absorption spectroscopy
 
 ## Documentation
 
 ### Example
-
-### Modules
 
 ### Constants
 
