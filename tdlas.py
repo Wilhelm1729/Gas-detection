@@ -28,11 +28,6 @@ range_nu_max = int(10**7/range_l_min)
 db_begin('data')
 fetch(compound,id,isotopologue,range_nu_min,range_nu_max)
 
-# Experiment parameters
-path_length = 100 # in cm
-concentration = 10**(-5) # mols per cm^3
-
-
 def wavelength_DFP(current):
     """Returns the wavelength distribution the laser emits given a current"""
 
@@ -44,7 +39,8 @@ def wavelength_DFP(current):
 
     return (intensity, wavelength)
 
-# Absorption coefficient, make function from absorption
+
+# Absorption coefficient
 nu, coef = absorptionCoefficient_Lorentz(SourceTables=compound, Diluent={'air':1.0})
 nu = np.array(nu)
 ll = 10 ** 7 / nu
@@ -60,27 +56,67 @@ def gas_absorption(wavelength_distibution, L, c):
     return total_intensity
     
 
-def get_detection(current):
+def get_detection(current, path_length, concentration):
     k = 1 # Constant, voltage is proportional to measured intensity
     return k * gas_absorption(wavelength_DFP(current), path_length, concentration)
 
 
-# Driving current
-threshold_current = 0.05
+def direct_absorption():
+    """DIRECT ABSORPTION SPECTROSCOPY"""
+    # Driving current
+    threshold_current = 0.05
 
-# Sawtooth wave
-t = np.linspace(0,1,500)
-driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 3 * t))
+    # Sawtooth wave
+    t = np.linspace(0,1,500)
+    driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 3 * t))
+    
+    # Experiment parameters
+    path_length = 10 # in cm
+    concentration = 10**(-5) # mols per cm^3
 
-# Measured voltage
-v = np.array([get_detection(current) for current in driving_current])
+    # Measured voltage
+    v = np.array([get_detection(current, path_length, concentration) for current in driving_current])
+
+    #plt.plot(t, driving_current)
+    plt.plot(t, v)
+    plt.show()
 
 
-#plt.plot(t, driving_current)
-plt.plot(t, v)
-plt.show()
+def wavelength_modulation():
+    """WAVELENGTH MODULATION SPECTROSCOPY"""
+
+    # Driving current
+    threshold_current = 0.05
+
+    modulation_frequency = 100
+    modulation_amplitude = 0.005
+
+    # Modulated wave
+    t = np.linspace(0,1,500)
+    driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 2 * t))
+    modulated_current = modulation_amplitude * np.sin(2 * np.pi * modulation_frequency * t)
+    total_current = driving_current+modulated_current
+
+    # Measured voltage
+    v = np.array([get_detection(current) for current in driving_current])
+
+    # Lock-in amplifier
+
+    reference_frequency = 100
+
+    #UNFINISHED
 
 
+def lock_in_amp(signal, frequency):
+    pass
+
+
+
+def main():
+    direct_absorption()
+
+if __name__ == "__main__":
+    main()
 
 """
 l = np.linspace(750,770)
