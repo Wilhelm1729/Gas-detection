@@ -31,7 +31,7 @@ fetch(compound,id,isotopologue,range_nu_min,range_nu_max)
 def wavelength_DFP(current):
     """Returns the wavelength distribution the laser emits given a current"""
 
-    center = 759 + 2 * current / 0.005
+    center = 763.7 + 0.4 * current / 0.03
     variance = 0.01 #"Linewidth of the laser"
 
     wavelength = np.linspace(center-0.05, center+0.05, 50)
@@ -48,7 +48,7 @@ get_absorption_coefficient = scipy.interpolate.interp1d(ll, coef)
 
 
 def gas_absorption(wavelength_distibution, L, c):
-    """Returns how much light is transmitted I / I_0."""
+    """Retuörns how much light is transmitted I / I_0."""
     (intensity, wavelength) = wavelength_distibution
     absorbed_intensity = intensity * exp(-get_absorption_coefficient(wavelength) * L * c * A)
     total_intensity = scipy.integrate.simpson(absorbed_intensity, x=wavelength)
@@ -58,29 +58,35 @@ def gas_absorption(wavelength_distibution, L, c):
 
 def get_detection(current, path_length, concentration):
     k = 1 # Constant, voltage is proportional to measured intensity
+
+    k = 0 if current < 0.01 else current-0.01
+
     return k * gas_absorption(wavelength_DFP(current), path_length, concentration)
 
 
 def direct_absorption():
     """DIRECT ABSORPTION SPECTROSCOPY"""
     # Driving current
-    threshold_current = 0.05
+    threshold_current = 0.03
 
     # Sawtooth wave
     t = np.linspace(0,1,500)
-    driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 3 * t))
+    driving_current = 0.02 + threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 3 * t))
     
     # Experiment parameters
-    path_length = 10 # in cm
-    concentration = 10**(-5) # mols per cm^3
+    path_length = 44 # in cm
+    concentration = 0.72*10**(-5) # mols per cm^3
 
     # Measured voltage
     v = np.array([get_detection(current, path_length, concentration) for current in driving_current])
 
     #plt.plot(t, driving_current)
     plt.plot(t, v)
-    plt.show()
+    #plt.plot(t, driving_current)
 
+    
+    
+    plt.show()
 
 def wavelength_modulation():
     """WAVELENGTH MODULATION SPECTROSCOPY"""
