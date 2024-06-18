@@ -46,7 +46,7 @@ def gas_absorption(wavelength, L, c):
 
 def calculate_oxygen_concentration(V0, V, L, epsilon):
     # Calculate absorbance
-    A = np.log10(V0 / V)
+    A = np.log(V0 / V)
     
     # Calculate concentration
     C = A / (epsilon * L)
