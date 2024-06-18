@@ -43,7 +43,16 @@ get_absorption_coefficient = scipy.interpolate.interp1d(ll, coef)
 def gas_absorption(wavelength, L, c):
     """Returns how much light is transmitted I / I_0."""
     return exp(-get_absorption_coefficient(wavelength) * L * c * A)
+
+def calculate_oxygen_concentration(V0, V, L, epsilon):
+    # Calculate absorbance
+    A = np.log10(V0 / V)
     
+    # Calculate concentration
+    C = A / (epsilon * L)
+
+    #Returns concentration (molecules per cubic centimeter)
+    return C
     
 
 def get_detection(current, path_length, concentration):
