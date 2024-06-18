@@ -44,6 +44,7 @@ def gas_absorption(wavelength, L, c):
     """Returns how much light is transmitted I / I_0."""
     return exp(-get_absorption_coefficient(wavelength) * L * c * A)
     
+    
 
 def get_detection(current, path_length, concentration):
     k = 1 # Constant, voltage is proportional to measured intensity
@@ -81,34 +82,66 @@ def wavelength_modulation():
     """WAVELENGTH MODULATION SPECTROSCOPY"""
 
     # Driving current
-    threshold_current = 0.05
+    threshold_current = 0.03
 
-    modulation_frequency = 100
-    modulation_amplitude = 0.005
+    modulation_frequency = 200
+    modulation_amplitude = 0.002
 
     # Modulated wave
-    t = np.linspace(0,1,500)
-    driving_current = threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * 2 * t))
+    t = np.linspace(0,1,2000)
+
+    driving_current = 0.02 + threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * t))
+
     modulated_current = modulation_amplitude * np.sin(2 * np.pi * modulation_frequency * t)
     total_current = driving_current+modulated_current
 
+    # Experiment parameters
+    path_length = 300 # in cm
+    concentration = 0.72*10**(-5) # mols per cm^3
+
+
     # Measured voltage
-    v = np.array([get_detection(current) for current in driving_current])
+    v = np.array([get_detection(current, path_length, concentration) for current in total_current])
 
     # Lock-in amplifier
+    reference_frequency = 200
 
-    reference_frequency = 100
+    # Multiply by cosine
+    signal = v * np.cos(2 * np.pi * reference_frequency * t)
 
-    #UNFINISHED
+    # Low pass filter 
+    N, Wn = scipy.signal.cheb1ord(0.2, 0.3, 3, 40)
+    b, a = scipy.signal.cheby1(N, 3, Wn, btype = 'low', analog = False)
+
+    #w, h = scipy.signal.freqz(b, a, worN = 2000)
 
 
-def lock_in_amp(signal, frequency):
-    pass
+    filtered_signal = scipy.signal.lfilter(b, a, signal)
+
+    
+    #plt.plot(w / np.pi, 20 * np.log10(abs(h)))
+
+
+    #plt.plot(t, signal)
+    plt.plot(t, filtered_signal)
+    plt.show()
+
+
+
+
+
+
+
+
+def lock_in_amp(t, signal, frequency):
+    T = t[-1]
+    integrand = np.sin(2 * np.pi * frequency * t) * signal
+    return 1/T * scipy.integrate.simpson(t, integrand)
 
 
 
 def main():
-    direct_absorption()
+    wavelength_modulation()
 
 if __name__ == "__main__":
     main()
