@@ -84,11 +84,11 @@ def wavelength_modulation():
     # Driving current
     threshold_current = 0.03
 
-    modulation_frequency = 200
+    modulation_frequency = 5000
     modulation_amplitude = 0.002
 
     # Modulated wave
-    t = np.linspace(0,1,2000)
+    t = np.linspace(0,1,50000)
 
     driving_current = 0.02 + threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * t))
 
@@ -101,42 +101,53 @@ def wavelength_modulation():
 
 
     # Measured voltage
-    v = np.array([get_detection(current, path_length, concentration) for current in total_current])
+    v1 = np.array([get_detection(current, path_length, concentration) for current in total_current])
+    v2 = np.array([get_detection(current, path_length, 2*concentration) for current in total_current])
 
     # Lock-in amplifier
-    reference_frequency = 200
+    reference_frequency = 10000
 
     # Multiply by cosine
-    signal = v * np.cos(2 * np.pi * reference_frequency * t)
-
-    # Low pass filter 
-    N, Wn = scipy.signal.cheb1ord(0.2, 0.3, 3, 40)
-    b, a = scipy.signal.cheby1(N, 3, Wn, btype = 'low', analog = False)
-
-    #w, h = scipy.signal.freqz(b, a, worN = 2000)
-
-
-    filtered_signal = scipy.signal.lfilter(b, a, signal)
-
+    signal1 = v1 * np.cos(2 * np.pi * reference_frequency * t)
+    signal2 = v2 * np.cos(2 * np.pi * reference_frequency * t)
+    #signal1_sin = v1 * np.sin(2 * np.pi * reference_frequency * t)
     
-    #plt.plot(w / np.pi, 20 * np.log10(abs(h)))
+    filtered_signal1 = lowpass_filter(signal1)
+    #filtered_signal1 = lowpass_filter(np.sqrt(signal1**2+signal1_sin**2))
+    filtered_signal2 = lowpass_filter(signal2)
+    
+    fig, axs = plt.subplots(2,2, figsize=(10, 10))
 
+    axs[0,0].plot(t, v1)
 
-    #plt.plot(t, signal)
-    plt.plot(t, filtered_signal)
+    axs[0,1].plot(t, signal1)
+
+    axs[1,0].plot(t, filtered_signal1)
+    axs[1,1].plot(t, filtered_signal2)
+
+    plt.tight_layout()
     plt.show()
 
 
 
+def lowpass_filter(signal):
+    """A lowpass filter"""
+    freq_cutoff_p = 30
+    freq_cutoff_s = 100
+    sampling_rate = 50000
+
+    rp = 1
+    rs = 40
+
+    wp = freq_cutoff_p / (sampling_rate / 2)
+    ws = freq_cutoff_s / (sampling_rate / 2)
+
+    N, Wn = scipy.signal.cheb1ord(wp, ws, rp, rs)
+    b, a = scipy.signal.cheby1(N, rp, Wn, btype = 'lowpass', analog = False)
+    filtered_signal = scipy.signal.lfilter(b, a, signal)
 
 
-
-
-
-def lock_in_amp(t, signal, frequency):
-    T = t[-1]
-    integrand = np.sin(2 * np.pi * frequency * t) * signal
-    return 1/T * scipy.integrate.simpson(t, integrand)
+    return filtered_signal
 
 
 
