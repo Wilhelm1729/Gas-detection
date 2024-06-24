@@ -28,20 +28,7 @@ range_nu_max = int(10**7/range_l_min)
 db_begin('data')
 fetch(compound,id,isotopologue,range_nu_min,range_nu_max)
 
-def wavelength_DFP(current):
-    """Returns the wavelength the laser emits given a current"""
-    return 763.7 + 0.4 * current / 0.03
 
-def output_laser764(current, temp):
-    """From datasheet for 764nm laser
-    Units: mW, nm, mA
-    Some things might be wrong but we did not use this laser
-    """
-    print(temp)
-    power = 0 if current < 10 else (current-10)/5 #at temp 25 c
-    wavelength = 763.6 + 0.7 / 20 * (current - 15) + (763.9-763.4)/10 * (temp - 25)
-
-    return (power, wavelength) 
 
 def output_laser761(current, temp):
     """
