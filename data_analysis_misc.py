@@ -299,10 +299,10 @@ def exp_plot():
     #f1 = "Plot/CO2-120mA-10000omega-23.1deg-49%RH-air/0.txt"
     #f2 = "Plot/CO2-120mA-10000omega-23.1deg-49%RH-air-A0.05/0.txt"
     
-    f1 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/4.txt"
+    f1 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH/4.txt"
     f2 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-5000Hz-0.022A/0.txt"
     
-    """
+    
     (x1, y1) = get_xy(f1, 0)
     (x2, y2) = get_xy(f2, 0)
     (x3, y3) = get_xy(f2, 3)
@@ -322,8 +322,11 @@ def exp_plot():
     axs[2].plot(x3,y3)
     axs[2].set_title("Lock-in amplifier")
     axs[2].set_xlabel("Sample points")
-    """
+    
+    plt.tight_layout()
+    plt.show()
 
+    """
     (x1, y1) = get_xy(f2, 1)
     (x2, y2) = get_xy(f2, 2)
     (x3, y3) = get_xy(f2, 3)
@@ -335,9 +338,10 @@ def exp_plot():
 
     plt.tight_layout()
     plt.show()
+    """
 
     #plot data points
-    #plt.plot(x_values, y_values, linestyle='solid') 
+    #Plt.plot(x_values, y_values, linestyle='solid') 
     #plt.xlabel('time samples')  
     #plt.ylabel('value') 
     #plt.show()
