@@ -1,17 +1,27 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-def plot_absorbtion(filename, ymaxrange, yminrange): #Hard coded for 50 000 data points
+
+def get_xy(filename, column_index):
     f = open(filename, "r")
-    y_values = f.readlines()
-    ymin = 1000
-    ymin_xvalue = 0
-    for i in range(len(y_values)):
-        y_values[i] = float(y_values[i][:8])
-        if y_values[i] < ymin and i < ymaxrange and i > yminrange: 
-            ymin = y_values[i]
-            ymin_xvalue = i
-    print("min y value:", ymin, "x value:", ymin_xvalue)
+    filedata = f.readlines()
+    size = len(filedata)
+
+    x_values = list()
+    y_values = list()
+
+    index = 0
+    for line in filedata:
+        columns = line.split()
+        y_values.append(float(columns[column_index]))
+        x_values.append(index)
+        index += 1
+
+    return (x_values, y_values)
+
+def plot_absorbtion(filename, ymaxrange, cutoff): #Hard coded for 50 000 data points
+    
+    (x_values, y_values) = get_xy(filename, 0)
     
     regression_data_y = []
     regression_data_x = []
@@ -23,31 +33,39 @@ def plot_absorbtion(filename, ymaxrange, yminrange): #Hard coded for 50 000 data
     regression_data_x_array = np.append(regression_data_x_array, ymaxrange)
     regression_data_y_array = np.array(regression_data_y)
     regression_data_y_array = np.append(regression_data_y_array, y_values[ymaxrange])
-
     # Calculate the regression line (slope and intercept)
     slope, intercept = np.polyfit(regression_data_x_array, regression_data_y_array, 1)
-    
-    #y above value
-    y_above_absorption = slope * ymin_xvalue + intercept # To do
-
-    print(y_above_absorption)
     # Generate the y values of the regression line
     regression_line = slope * regression_data_x_array + intercept
-    plt.plot(regression_data_x_array, regression_line, 'r-', label=f'Regression Line: y = {slope:.2f}x + {intercept:.2f}')
- 
- 
-    x_values = list(range(1, 50001))
+
+
+    quotient = []
+    min = 2
+
+    for i in range(50000):
+        initial = slope * i + intercept
+        absorbed = y_values[i]
+        q = absorbed / initial
+        quotient.append(q)
+        if q < min and i < cutoff:
+            min = q
+    
+    print(min)
 
     #plot data points
-    plt.plot(x_values, y_values, linestyle='solid') 
-    plt.xlabel('x - axis, time')  
-    plt.ylabel('y - axis, absorption') 
 
-    plt.plot(ymin_xvalue, y_above_absorption, "g*")
+    #fig, axs = plt.subplots(2,1, figsize=(10, 10))
 
-    plt.show()
-    #return x_values, y_values, 
-    return y_above_absorption, ymin
+    #axs[0].plot(x_values, y_values, linestyle='solid') 
+    #axs[0].plot(regression_data_x_array, regression_line, 'r-', label=f'Regression Line: y = {slope:.2f}x + {intercept:.2f}')
+
+    #axs[1].plot(x_values, quotient)
+
+    #plt.tight_layout()
+    #plt.show()
+    
+    return min
+
 
 def calculate_oxygen_concentration(V0, V, L, epsilon):
     # Calculate absorbance
@@ -59,14 +77,132 @@ def calculate_oxygen_concentration(V0, V, L, epsilon):
     #Returns concentration (molecules per cubic centimeter)
     return C
 
-intensity_sent, intensity_recieved = plot_absorbtion("0.txt", 45000, 15000)
 
-oxygen_concentration = calculate_oxygen_concentration(intensity_sent, intensity_recieved, 44.2, 1.3e3)
+#V0_1, V_1 = plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/1.txt", 45000, 15000)
+#V0_2, V_2 = plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/1.txt", 45000, 15000)
+
+
+#A_1 = plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH/2.txt", 45000, 45000)
+#A_2 = plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/4.txt", 45000, 45000)
+
+
+
+sum_1 = 0
+sum_2 = 0
+for i in range(5):
+    sum_1  += plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+    sum_2  += plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+
+A_1 = sum_1 / 5
+A_2 = sum_2 / 5
+
+print(A_1, A_2)
+
+L = 400 #44.2 # cm
+A = 6.022 * 10**23
+#e = 4.9082 * 10**-23 #absorption coefficient for w=761.12
+#e = 4.6301 * 10**-23 #absorption coefficient for w = 761.0
+
+#oxygen_concentration = calculate_oxygen_concentration(intensity_sent, intensity_recieved, L, e*A)
+
+#print("Oxygen concentration", oxygen_concentration)
+
+# Search for the right absorption peak
+
+abs_coeff = [5.1248646136058054e-23, 4.4441924337452004e-23, 5.616444626627102e-23, 4.8526588398367214e-23, 5.455597787505272e-23, 4.6254426833187146e-23, 4.893293460994988e-23, 3.7909009909837687e-23, 3.621014010915559e-23, 2.4196619420450937e-23]
+
+#index 4 5 are the right abs coeff
+
+for i in range(len(abs_coeff)-1):
+    if i % 2 == 1:
+        continue
+
+    e_1 = abs_coeff[i]
+    e_2 = abs_coeff[i+1]
+
+    c_1 = calculate_oxygen_concentration(1, A_2, L, e_1*A)
+    c_2 = calculate_oxygen_concentration(1, A_1, L, e_2*A)
+
+    print(i, i+1)
+    print(c_1, c_2, c_1/c_2)
 
 
 """
-#Examples:
-plot_absorbtion("0")
-...
-plot_absorbtion("4")
+
+Using the data for the path length 44 cm:
+
+At 760.9:
+Conc = 7.96*10^-6 mol / cm^3
+
+At 761.0:
+Conc = 7.75*10^-6 mol / cm^3
+
+Using the data for the path length 300
+
+
+
+760.9 and 761.0 yields precisely 1.052 * 10^-5 mol / cm^3 (344 cm)
+
+
+
+
+
+
+
+
+
+
+Outdated:
+
+New hypothesis:
+
+At 760.9:
+Conc = 8.29*10^-5 mol / cm^3
+
+At 761.0:
+Conc = 8.23*10^-5 mol / cm^3
+
+
+
+PV = NRT
+V = 1 cm^3 = 0.01^3 m^3
+N = PV / RT = 101000 * 0.01^3 / 8.314 / 300 = 4 * 10^-5 (pure 100% oxygen)
+
+
+
+
+
+At 761:
+Conc = 9.6499 * 10^-5
+
+At 761.12
+Conc = 7.5636 * 10^-5
+
+mol/cm^3
+
+SO this is wrong.
+
+
+Table of absorption coefficients.
+
+The peak at 31.6 mA is slightly (0.8877) stronger than the one at 40 mA (0.905)
+
+    nm           absorption coeff (10^-23)
+    760
+    760
+    
+    760.65          5.616
+    760.75          4.853
+
+    760.9           5.456
+    761.0           4.625
+
+    761.12          4.893
+    761.25          3.791
+
+    761.4           3.621
+    761.55          2.419
+
+
+
 """

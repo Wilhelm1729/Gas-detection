@@ -69,7 +69,7 @@ def O2_exhaled():
     w = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-wilhelm/0.txt", 3)
     w1 = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-wilhelm1/0.txt", 3)
 
-    air_conc = 0.18 #change
+    air_conc = 0.193 #change
 
     martin = air_conc * m / calibration
     martin1 = air_conc * m1 / calibration
@@ -82,8 +82,12 @@ def O2_exhaled():
     print("martin1", martin1)
     print("martin2", martin2)
 
+    print("martin mean", (martin+martin1+martin2)/3)
+
     print("wilhelm1", wilhelm)
     print("wilhelm2", wilhelm1)
+
+    print("wilhelm mean", (wilhelm+wilhelm1)/2)
 
 
 
@@ -265,7 +269,20 @@ def VAPOR_exhaled():
     martin = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-MARTIN/0.txt", 0)
     wilhelm = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-WILHELM/0.txt", 0)
 
-    calibration_conc = 2.7 #correct, look this up later
+    calibration_conc = 2.08747
+    
+    """
+    RH 77%
+    Temp 22.4 deg
+
+    22 -> 2.6447
+    23 -> 2.8104
+
+    2.6447 + (2.8104-2.6447) * 0.4 = 2.711
+    2.711 * 0.77 = 2.08747
+    """
+
+
 
     aron_conc = calibration_conc * aron / calibration
     martin_conc = calibration_conc * martin / calibration
@@ -276,8 +293,67 @@ def VAPOR_exhaled():
     print("Exhaled by wilhelm", wilhelm_conc, "proc")
 
 
+
+def exp_plot():
+
+    #f1 = "Plot/CO2-120mA-10000omega-23.1deg-49%RH-air/0.txt"
+    #f2 = "Plot/CO2-120mA-10000omega-23.1deg-49%RH-air-A0.05/0.txt"
+    
+    f1 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/4.txt"
+    f2 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-5000Hz-0.022A/0.txt"
+    
+    """
+    (x1, y1) = get_xy(f1, 0)
+    (x2, y2) = get_xy(f2, 0)
+    (x3, y3) = get_xy(f2, 3)
+
+    fig, axs = plt.subplots(1,3, figsize=(15, 5))
+
+    axs[0].plot(x1,y1)
+    axs[0].set_title("Sawtooth")
+    axs[0].set_ylabel("Voltage from detector [V]")
+    axs[0].set_xlabel("Sample points")
+
+    axs[1].plot(x2,y2)
+    axs[1].set_title("With modulation")
+    axs[1].set_ylabel("Voltage from detector [V]")
+    axs[1].set_xlabel("Sample points")
+
+    axs[2].plot(x3,y3)
+    axs[2].set_title("Lock-in amplifier")
+    axs[2].set_xlabel("Sample points")
+    """
+
+    (x1, y1) = get_xy(f2, 1)
+    (x2, y2) = get_xy(f2, 2)
+    (x3, y3) = get_xy(f2, 3)
+
+    fig, axs = plt.subplots(1,3, figsize=(15, 5))
+    axs[0].plot(x1,y1)
+    axs[1].plot(x2,y2)
+    axs[2].plot(x3,y3)
+
+    plt.tight_layout()
+    plt.show()
+
+    #plot data points
+    #plt.plot(x_values, y_values, linestyle='solid') 
+    #plt.xlabel('time samples')  
+    #plt.ylabel('value') 
+    #plt.show()
+
+
 if __name__ == "__main__":
-    pass
+    #open_and_plot("O2-40mA-8008omega-23.1deg-49%RH-air-DAS/0.txt", 0)
+    #VAPOR_exhaled()
+    #O2_exhaled()
+    #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/0.txt",0)
+    #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/0.txt",0)
+    #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",0)
+    #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",3)
+    #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/0.txt",0)
+    exp_plot()
+    
 
 
 

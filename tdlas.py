@@ -26,7 +26,7 @@ range_nu_max = int(10**7/range_l_min)
 
 # Load data
 db_begin('data')
-fetch(compound,id,isotopologue,range_nu_min,range_nu_max)
+#fetch(compound,id,isotopologue,range_nu_min,range_nu_max)
 
 
 
@@ -63,7 +63,7 @@ def direct_absorption():
     sawtooth_amp = 0.05
     sawtooth_freq = 1
 
-    base_current = 40.5 + 1.8 #mA
+    base_current = 40 - 7 #mA
     temperature = 30.13 #from omega = 8008
 
     # Sawtooth wave
@@ -73,16 +73,16 @@ def direct_absorption():
     driving_current = base_current + 50 * voltage_signal
 
     # Experiment parameters
-    path_length = 44 # in cm
+    path_length = 300 # in cm
     concentration = 0.72*10**(-5) # mols per cm^3
 
     # Measured voltage
     v = np.array([get_detection(current, temperature, path_length, concentration) for current in driving_current])
-    """
-    plt.plot(t, v)
-    plt.title("Detector")
-    plt.show()
-    """
+
+    #plt.plot(t, v)
+    #plt.title("Detector")
+    #plt.show()
+    
     
     fig, axs = plt.subplots(2,2, figsize=(10, 10))
 
@@ -108,54 +108,78 @@ def direct_absorption():
 def wavelength_modulation():
     """WAVELENGTH MODULATION SPECTROSCOPY"""
 
+    
     # Driving current
-    threshold_current = 30
+    sawtooth_amp = 0.05
+    sawtooth_freq = 1
 
-    modulation_frequency = 5000
-    modulation_amplitude = 0.002
+    f = 4900
 
-    # Modulated wave
+    modulation_frequency = f
+    modulation_amplitude = 0.022
+
+    base_current = 32.2 #mA
+    temperature = 30.13 #from omega = 8008
+
+    # Sawtooth wave
     t = np.linspace(0,1,50000)
 
-    driving_current = 20 + threshold_current / 2 * (1 + scipy.signal.sawtooth(2 * np.pi * t))
+    voltage_signal = sawtooth_amp * (1 + scipy.signal.sawtooth(2 * np.pi * t * sawtooth_freq))
+    modulating_voltage = modulation_amplitude * np.sin(2 * np.pi * modulation_frequency * t)
 
-    modulated_current = modulation_amplitude * np.sin(2 * np.pi * modulation_frequency * t)
-    total_current = driving_current + modulated_current
+    driving_current = base_current + 50 * (voltage_signal + modulating_voltage)
+    dc = base_current + 50 * voltage_signal
+
+    #w = np.array([output_laser761(current, temperature)[1] for current in driving_current])
 
     # Experiment parameters
-    path_length = 300 # in cm
-    concentration = 0.72*10**(-5) # mols per cm^3
-
+    path_length = 44 # in cm
+    concentration = 0.94*10**(-5) # mols per cm^3
 
     # Measured voltage
-    v1 = np.array([get_detection(current, path_length, concentration) for current in total_current])
-    v2 = np.array([get_detection(current, path_length, 2*concentration) for current in total_current])
+    v0 = np.array([get_detection(current, temperature, path_length, concentration) for current in dc])
+    v1 = np.array([get_detection(current, temperature, path_length, concentration) for current in driving_current])
+    
 
+    #(t, v1) = get_xy("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-5000Hz-0.022A/0.txt",0)
+    # t = np.array(t)
+    # v1 = np.array(v1)
     # Lock-in amplifier
-    reference_frequency = 10000
+    reference_frequency = 2 * f
 
     # Multiply by cosine
-    signal1 = v1 * np.cos(2 * np.pi * reference_frequency * t)
-    signal2 = v2 * np.cos(2 * np.pi * reference_frequency * t)
+    signal_cos = v1 * np.cos(2 * np.pi * reference_frequency * t)
+    signal_sin = v1 * np.sin(2 * np.pi * reference_frequency * t)
+
     #signal1_sin = v1 * np.sin(2 * np.pi * reference_frequency * t)
     
-    filtered_signal1 = lowpass_filter(signal1)
+    filtered_signal_cos = lowpass_filter(signal_cos)
+    filtered_signal_sin = lowpass_filter(signal_sin)
+
+    filtered_signal = np.sqrt(filtered_signal_cos**2+filtered_signal_sin**2)
     #filtered_signal1 = lowpass_filter(np.sqrt(signal1**2+signal1_sin**2))
-    filtered_signal2 = lowpass_filter(signal2)
-    
-    fig, axs = plt.subplots(2,2, figsize=(10, 10))
 
-    axs[0,0].plot(t, v1)
+    fig, axs = plt.subplots(1,3, figsize=(15, 5))
 
-    axs[0,1].plot(t, signal1)
+    #axs[0].plot(t, w)
+    axs[0].plot(t, v0)
+    axs[0].set_title("Sawtooth")
+    axs[0].set_ylabel("Voltage from detector")
+    axs[0].set_xlabel("Time")
 
-    axs[1,0].plot(t, filtered_signal1)
-    axs[1,1].plot(t, filtered_signal2)
+    axs[1].plot(t, v1)
+    axs[1].set_title("With modulation")
+    axs[1].set_ylabel("Voltage from detector")
+    axs[1].set_xlabel("Time")
+    #axs[0,0].set_ylim(6,10)
+
+    axs[2].plot(t, filtered_signal)
+    axs[2].set_title("Lock-in amplifier")
+    axs[2].set_xlabel("Time")
 
     plt.tight_layout()
     plt.show()
-
-
+    
 
 def lowpass_filter(signal):
     """A lowpass filter"""
@@ -163,8 +187,8 @@ def lowpass_filter(signal):
     freq_cutoff_s = 100
     sampling_rate = 50000
 
-    rp = 1
-    rs = 40
+    rp = 3
+    rs = 64
 
     wp = freq_cutoff_p / (sampling_rate / 2)
     ws = freq_cutoff_s / (sampling_rate / 2)
@@ -176,24 +200,66 @@ def lowpass_filter(signal):
     return filtered_signal
 
 
+
 def plot_absortion_coefficient(l_min, l_max):
+    """
+    Plots the absorption coefficient and finds the peaks.
+    """
     #l = np.linspace(750,770)
     #i = gas_absorption(l, path_length, concentration)
     l = np.linspace(l_min, l_max, 1000)
 
     e = get_absorption_coefficient(l)
-
+    
     plt.plot(l,e)
     plt.show()
 
+    centers = [760.45, 760.58, 760.65, 760.75, 760.9, 761.0, 761.12, 761.25, 761.4, 761.55]
+
+    abs_coeff = []
+
+    for c in centers:
+        r = np.linspace(c - 0.05, c + 0.05 ,100)
+        values = get_absorption_coefficient(r)
+        m = max(values)
+        abs_coeff.append(m)
+
+
+    print(abs_coeff)
+
+    """
+    4.9082 * 10^-23 at 761.12
+    4.6301 * 10^-23 at 761.0
+    
+    """
+
+
+    """
+    Look at:
+
+    nm           absorption coeff (10^-23)
+    760.65          5.616
+    760.75          4.853
+
+    760.9           5.456
+    761.0           4.625
+
+    761.12          4.893
+    761.25          3.791
+
+    761.4           3.621
+    761.55          2.419
+    
+    r=0.05
+    """
 
 
 def main():
     #plot_absortion_coefficient(760,762)
-    direct_absorption()
+    #direct_absorption()
+    wavelength_modulation()
 
 if __name__ == "__main__":
     main()
-
 
 
