@@ -1,10 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-
-
-
-
 def open_and_plot(filename, column_index):
     (x_values, y_values) = get_xy(filename, column_index)
 
@@ -13,7 +9,6 @@ def open_and_plot(filename, column_index):
     plt.xlabel('time samples')  
     plt.ylabel('value') 
     plt.show()
-
 
 def get_value(filename, column_index):
     (x_values, y_values) = get_xy(filename, column_index)
@@ -55,7 +50,6 @@ def get_xy(filename, column_index):
         index += 1
 
     return (x_values, y_values)
-
 
 ### OXYGEN ################################################################################################
 def O2_exhaled():
@@ -135,7 +129,6 @@ def CO2_gasmix():
 
     plt.show()
 
-
 def CO2_conc_in_air():
     """Concentration in air in ppm"""
     calibration = get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
@@ -145,7 +138,6 @@ def CO2_conc_in_air():
     conc_in_air = 3000 * air / calibration
 
     print(conc_in_air)
-
 
 def CO2_exhale():
 
@@ -162,7 +154,6 @@ def CO2_exhale():
     print("Aron", aron)
     print("Martin", martin)
     print("Wilhelm", wilhelm)
-
 
 def CO2_detection_limit():
     """
@@ -243,7 +234,6 @@ def CH4_detection_limit():
 
     print("Detection limit of CH4 measurements", detection_limit, "ppm")
 
-
 def CH4_exhaled():
     
     calibration = get_value("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-100PPM-A0.1/0.txt", 3)
@@ -257,10 +247,7 @@ def CH4_exhaled():
     print("Concentration in air", air_conc, "ppm")
     print("Exhaled by martin", martin_conc, "ppm")
 
-
-
 ### VAPOR ################################################################################################
-
 def VAPOR_exhaled():
     
     calibration = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH/0.txt", 0)
@@ -346,7 +333,6 @@ def exp_plot():
     #plt.ylabel('value') 
     #plt.show()
 
-
 if __name__ == "__main__":
     #open_and_plot("O2-40mA-8008omega-23.1deg-49%RH-air-DAS/0.txt", 0)
     #VAPOR_exhaled()
@@ -357,12 +343,8 @@ if __name__ == "__main__":
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",3)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/0.txt",0)
     exp_plot()
-    
-
-
 
 #open_and_plot("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
 #open_and_plot("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-AIR-LOCKIN/0.txt", 0)
 #print(CO2_conc_in_air())    
 #open_and_plot("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin/0.txt", 3)
-
