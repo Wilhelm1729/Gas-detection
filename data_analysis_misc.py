@@ -353,7 +353,6 @@ def VAPOR_exhaled():
     cal_conc = swp * RH
     cal_conc_error = ((swp * dRH)**2 + (swp_e * RH)**2)**(1/2)
 
-    print("TEST", cal_conc, cal_conc_error)
 
     """
     RH 77%
@@ -385,8 +384,8 @@ def VAPOR_exhaled():
     """
 
     print("Vapor exhaled by aron (%)", ca, cae)
-    print("Vapor exhaled by martin", cm, cme)
-    print("Vapor exhaled by wilhelm", cw, cwe)
+    print("Vapor exhaled by martin (%)", cm, cme)
+    print("Vapor exhaled by wilhelm (%)", cw, cwe)
 
 
 
