@@ -1,6 +1,10 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
+
+
+
+
 def open_and_plot(filename, column_index):
     (x_values, y_values) = get_xy(filename, column_index)
 
@@ -9,6 +13,7 @@ def open_and_plot(filename, column_index):
     plt.xlabel('time samples')  
     plt.ylabel('value') 
     plt.show()
+
 
 def get_value(filename, column_index):
     (x_values, y_values) = get_xy(filename, column_index)
@@ -21,6 +26,24 @@ def get_value(filename, column_index):
     y_max = max(interval)
 
     return y_max
+
+def get_value_with_error(filename, column_index):
+    (x_values, y_values) = get_xy(filename, column_index)
+
+    #Check these parameters
+    r = 5000
+    center = 30000                          
+    interval = y_values[center-r:center+r]
+
+
+    y_max = max(interval)
+    y_max_index = np.argmax(interval)
+
+    std_r = 100
+    std = np.std(y_values[y_max_index-std_r:y_max_index+std_r])
+
+
+    return (y_max, std)
 
 def get_standard_error(filename, column_index, start, stop):
     (x_values, y_values) = get_xy(filename, column_index)
@@ -51,37 +74,62 @@ def get_xy(filename, column_index):
 
     return (x_values, y_values)
 
+
+
+
+def get_exhaled_and_error(amp, cal_amp, cal_conc, delta_amp, delta_cal_amp, delta_cal_conc):
+    """
+        Return concetration and error in concentration
+    """
+
+    conc = cal_conc * amp / cal_amp
+
+    delta_conc = ((amp/cal_amp)**2*delta_cal_conc**2 + (cal_conc / cal_amp)**2*delta_amp**2 + (cal_conc * amp / cal_amp**2)**2*delta_cal_amp**2 )**(1/2)
+
+    return (conc, delta_conc)
+
+
 ### OXYGEN ################################################################################################
 def O2_exhaled():
 
-    calibration = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS/0.txt", 3)
+    (calibration, cal_error) = get_value_with_error("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS/0.txt", 3)
 
-    m = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin/0.txt", 3)
-    m1 = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin1/0.txt", 3)
-    m2 = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin2/0.txt", 3)
+    (m1, me1) = get_value_with_error("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin/0.txt", 3)
+    (m2, me2) = get_value_with_error("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin1/0.txt", 3)
+    (m3, me3) = get_value_with_error("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin2/0.txt", 3)
 
-    w = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-wilhelm/0.txt", 3)
-    w1 = get_value("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-wilhelm1/0.txt", 3)
+    (w1, we1) = get_value_with_error("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-wilhelm/0.txt", 3)
+    (w2, we2) = get_value_with_error("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-wilhelm1/0.txt", 3)
 
-    air_conc = 0.193 #change
+    air_conc = 19.47 #before 0.193
+    air_conc_delta = 0.87
 
+    """
     martin = air_conc * m / calibration
     martin1 = air_conc * m1 / calibration
     martin2 = air_conc * m2 / calibration
 
     wilhelm = air_conc * w / calibration
     wilhelm1 = air_conc * w1 / calibration
+    """
 
-    print("martin", martin)
-    print("martin1", martin1)
-    print("martin2", martin2)
+    (cm1, cme1) = get_exhaled_and_error(m1, calibration, air_conc, me1, cal_error, air_conc_delta)
+    (cm2, cme2) = get_exhaled_and_error(m2, calibration, air_conc, me2, cal_error, air_conc_delta)
+    (cm3, cme3) = get_exhaled_and_error(m3, calibration, air_conc, me3, cal_error, air_conc_delta)
 
-    print("martin mean", (martin+martin1+martin2)/3)
+    martin_conc = (cm1 + cm2 + cm3) / 3
+    martin_conc_error = (cme1**2 + cme2**2 + cme3**2)**(1/2)/3
 
-    print("wilhelm1", wilhelm)
-    print("wilhelm2", wilhelm1)
 
-    print("wilhelm mean", (wilhelm+wilhelm1)/2)
+    (cw1, cwe1) = get_exhaled_and_error(w1, calibration, air_conc, we1, cal_error, air_conc_delta)
+    (cw2, cwe2) = get_exhaled_and_error(w2, calibration, air_conc, we2, cal_error, air_conc_delta)
+
+    wilhelm_conc = (cw1 + cw2) /2
+    wilhelm_conc_error = (cwe1**2 + cwe2**2)**(1/2)/2
+
+    print("O2 Martin: (%)", martin_conc, martin_conc_error)
+
+    print("O2 Wilhelm: (%)", wilhelm_conc, wilhelm_conc_error)
 
 
 
@@ -129,31 +177,49 @@ def CO2_gasmix():
 
     plt.show()
 
+
 def CO2_conc_in_air():
     """Concentration in air in ppm"""
-    calibration = get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
+    (calibration, cal_err) = get_value_with_error("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
 
-    air = get_value("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-AIR-LOCKIN/0.txt", 0)
+    (air, air_err) = get_value_with_error("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-AIR-LOCKIN/0.txt", 0)
 
-    conc_in_air = 3000 * air / calibration
+    cal_conc = 3000
+    cal_conc_error = 1
 
-    print(conc_in_air)
+    (conc_in_air, delta_conc_in_air) = get_exhaled_and_error(air, calibration, cal_conc, air_err, cal_err, cal_conc_error)
+
+
+    #conc_in_air = 3000 * air / calibration
+
+    print("CO2 concentration in air: (ppm)", conc_in_air, delta_conc_in_air)
+
 
 def CO2_exhale():
 
-    calibration = get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
+    #calibration = get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
+    (calibration, cal_err) = get_value_with_error("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
 
-    m = get_value("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-MARTIN-LOCKIN/0.txt", 0)
-    w = get_value("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-WILHELM-LOCKIN/0.txt", 0)
-    a = get_value("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-ARON-LOCKIN/0.txt", 0)
-    
-    martin = 3000 * m / calibration
-    wilhelm = 3000 * w / calibration
-    aron = 3000 * a / calibration
+    (m, me) = get_value_with_error("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-MARTIN-LOCKIN/0.txt", 0)
+    (w, we) = get_value_with_error("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-WILHELM-LOCKIN/0.txt", 0)
+    (a, ae) = get_value_with_error("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-ARON-LOCKIN/0.txt", 0)
 
-    print("Aron", aron)
-    print("Martin", martin)
-    print("Wilhelm", wilhelm)
+    cal_conc = 3000
+    cal_conc_error = 1
+
+    (cm, cme) = get_exhaled_and_error(m, calibration, cal_conc, me, cal_err, cal_conc_error)
+    (cw, cwe) = get_exhaled_and_error(w, calibration, cal_conc, we, cal_err, cal_conc_error)
+    (ca, cae) = get_exhaled_and_error(a, calibration, cal_conc, ae, cal_err, cal_conc_error)
+
+
+    #martin = 3000 * m / calibration
+    #wilhelm = 3000 * w / calibration
+    #aron = 3000 * a / calibration
+
+    print("CO2 Aron (ppm)", ca, cae)
+    print("CO2 Martin (ppm)", cm, cme)
+    print("CO2 Wilhelm (ppm)", cw, cwe)
+
 
 def CO2_detection_limit():
     """
@@ -234,30 +300,61 @@ def CH4_detection_limit():
 
     print("Detection limit of CH4 measurements", detection_limit, "ppm")
 
+
 def CH4_exhaled():
     
+    (calibration, cal_err) = get_value_with_error("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-100PPM-A0.1/0.txt", 3)
+
+    (air, aire) = get_value_with_error("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-AIR/0.txt", 3)
+    (m, me) = get_value_with_error("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-MARTIN/0.txt", 3)
+    
+    cal_conc = 100
+    cal_conc_error = 1
+
+    (cm, cme) = get_exhaled_and_error(m, calibration, cal_conc, me, cal_err, cal_conc_error)
+    (cair, caire) = get_exhaled_and_error(air, calibration, cal_conc, aire, cal_err, cal_conc_error)
+
+    """
     calibration = get_value("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-100PPM-A0.1/0.txt", 3)
 
     air = get_value("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-AIR/0.txt", 3)
     martin = get_value("CH4_exhaled/CH4-130mA-11000omega-22.4deg-77%RH-MARTIN/0.txt", 3)
 
+    cal_conc = 100
+
     air_conc = 100 * air / calibration
     martin_conc = 100 * martin / calibration
+    """
 
-    print("Concentration in air", air_conc, "ppm")
-    print("Exhaled by martin", martin_conc, "ppm")
+    print("CH4 concentration in air (ppm)", cair, caire)
+    print("CH4 Exhaled by martin (ppm)", me, cme)
+
+
 
 ### VAPOR ################################################################################################
+
 def VAPOR_exhaled():
     
-    calibration = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH/0.txt", 0)
+    (calibration, cal_err) = get_value_with_error("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH/0.txt", 0)
 
-    aron = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-ARON/0.txt", 0)
-    martin = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-MARTIN/0.txt", 0)
-    wilhelm = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-WILHELM/0.txt", 0)
+    (m, me) = get_value_with_error("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-MARTIN/0.txt", 0)
+    (w, we) = get_value_with_error("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-WILHELM/0.txt", 0)
+    (a, ae) = get_value_with_error("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-ARON/0.txt", 0)
 
-    calibration_conc = 2.08747
+
+    RH = 0.77
+    dRH = 0.05
+    temp = 22.4
+    dtemp = 0.1
+
+    swp = 2.6447 + (2.8104-2.6447) * 0.4 # 0.4 = 22.4 -22
+    swp_e = (2.8104-2.6447) * dtemp
     
+    cal_conc = swp * RH
+    cal_conc_error = ((swp * dRH)**2 + (swp_e * RH)**2)**(1/2)
+
+    print("TEST", cal_conc, cal_conc_error)
+
     """
     RH 77%
     Temp 22.4 deg
@@ -269,15 +366,27 @@ def VAPOR_exhaled():
     2.711 * 0.77 = 2.08747
     """
 
+    (cm, cme) = get_exhaled_and_error(m, calibration, cal_conc, me, cal_err, cal_conc_error)
+    (cw, cwe) = get_exhaled_and_error(w, calibration, cal_conc, we, cal_err, cal_conc_error)
+    (ca, cae) = get_exhaled_and_error(a, calibration, cal_conc, ae, cal_err, cal_conc_error)
 
+    """
+    calibration = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH/0.txt", 0)
+
+    aron = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-ARON/0.txt", 0)
+    martin = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-MARTIN/0.txt", 0)
+    wilhelm = get_value("VAPOR_exhaled/VAPOR-70mA-8008omega-22.4deg-77%RH-WILHELM/0.txt", 0)
+
+    calibration_conc = 2.08747
 
     aron_conc = calibration_conc * aron / calibration
     martin_conc = calibration_conc * martin / calibration
     wilhelm_conc = calibration_conc * wilhelm / calibration
+    """
 
-    print("Exhaled by aron", aron_conc, "proc")
-    print("Exhaled by martin", martin_conc, "proc")
-    print("Exhaled by wilhelm", wilhelm_conc, "proc")
+    print("Vapor exhaled by aron (%)", ca, cae)
+    print("Vapor exhaled by martin", cm, cme)
+    print("Vapor exhaled by wilhelm", cw, cwe)
 
 
 
@@ -333,7 +442,6 @@ def exp_plot():
     #plt.ylabel('value') 
     #plt.show()
 
-<<<<<<< HEAD
 
 
 def linear():
@@ -398,27 +506,25 @@ def linear():
     plt.show()
     
 
-=======
->>>>>>> 56c9b6607479f31899baa93b77d13e5a70383144
 if __name__ == "__main__":
     #open_and_plot("O2-40mA-8008omega-23.1deg-49%RH-air-DAS/0.txt", 0)
-    #VAPOR_exhaled()
-    #O2_exhaled()
+    VAPOR_exhaled()
+    CO2_conc_in_air()
+    CO2_exhale()
+    CH4_exhaled()
+    O2_exhaled()
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",3)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/0.txt",0)
-<<<<<<< HEAD
     #exp_plot()
-    linear()
+    #linear()
 
 
-=======
-    exp_plot()
->>>>>>> 56c9b6607479f31899baa93b77d13e5a70383144
 
 #open_and_plot("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0)
 #open_and_plot("CO2_exhaled/CO2-120mA-10000omega-23.1deg-49%RH-AIR-LOCKIN/0.txt", 0)
 #print(CO2_conc_in_air())    
 #open_and_plot("O2_exhaled/O2-40mA-8008omega-23.1deg-49%RH-air-WMS-martin/0.txt", 3)
+
