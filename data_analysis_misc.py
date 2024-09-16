@@ -131,7 +131,7 @@ def CO2_gasmix():
 
     plt.xlabel("Concentration [ppm]")
     plt.ylabel("Amplitude [V]")
-    plt.title("Amplitude of detection vs concentration of CO2")
+    plt.title("Amplitude of lock-in ampl. vs vs concentration of CO2")
 
     plt.show()
 
@@ -227,7 +227,7 @@ def CH4_gasmix():
 
     plt.xlabel("Concentration [ppm]")
     plt.ylabel("Amplitude [V]")
-    plt.title("Amplitude of detection vs concentration of CH4")
+    plt.title("Amplitude of lock-in ampl. vs concentration of CH4")
 
     plt.show()
 
@@ -347,6 +347,69 @@ def exp_plot():
     #plt.show()
 
 
+
+def linear():
+    
+    Concentration = [0, 500, 1000, 1500, 2000, 2500, 3000]
+
+    Amplitude = []
+
+    #Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N600/0.txt", 0))
+    #Detection limit. Need to take average
+
+    center = 30000
+    r = 1000
+    (mean, std) = get_standard_error("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N600/0.txt",0,center-r, center+r)
+
+    Amplitude.append(mean)
+
+    Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N500-O100/0.txt", 0))
+    Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N400-O200/0.txt", 0))
+    Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N300-O300/0.txt", 0))
+    Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N200-O400/0.txt", 0))
+    Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N100-O500/0.txt", 0))
+    Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N000-O600/0.txt", 0))
+
+    fig, axs = plt.subplots(1,2, figsize=(10, 4))
+
+    axs[0].plot(Concentration, Amplitude, marker="*")
+
+    axs[0].set_xlabel("Concentration [ppm]")
+    axs[0].set_ylabel("Amplitude [V]")
+    axs[0].set_title("Amplitude of lock-in ampl. vs vs concentration of CO2")
+
+
+    
+    Concentration = [0, 20, 40, 60, 80, 100]
+
+    Amplitude = []
+
+    #Amplitude.append(get_value("CO2_gasmix/CO2-120mA-10000omega-23.1deg-49%RH-N600/0.txt", 0))
+    #Detection limit. Need to take average
+
+    center = 30000
+    r = 1000
+    (mean, std) = get_standard_error("CH4_gasmix_and_detection_limit/CH4-130mA-11000omega-22.4deg-77%RH-0PPM/0.txt",3,center-r, center+r)
+
+    Amplitude.append(mean)
+
+    Amplitude.append(get_value("CH4_gasmix_and_detection_limit/CH4-130mA-11000omega-22.4deg-77%RH-20PPM/0.txt", 3))
+    Amplitude.append(get_value("CH4_gasmix_and_detection_limit/CH4-130mA-11000omega-22.4deg-77%RH-40PPM/0.txt", 3))
+    Amplitude.append(get_value("CH4_gasmix_and_detection_limit/CH4-130mA-11000omega-22.4deg-77%RH-60PPM/0.txt", 3))
+    Amplitude.append(get_value("CH4_gasmix_and_detection_limit/CH4-130mA-11000omega-22.4deg-77%RH-80PPM/0.txt", 3))
+    Amplitude.append(get_value("CH4_gasmix_and_detection_limit/CH4-130mA-11000omega-22.4deg-77%RH-100PPM-A0.1/0.txt", 3))
+    #Wrong name in data, last one different
+
+    axs[1].plot(Concentration, Amplitude, marker="*")
+
+    axs[1].set_xlabel("Concentration [ppm]")
+    axs[1].set_ylabel("Amplitude [V]")
+    axs[1].set_title("Amplitude of lock-in ampl. vs concentration of CH4")
+
+    plt.tight_layout()
+    plt.show()
+    
+
 if __name__ == "__main__":
     #open_and_plot("O2-40mA-8008omega-23.1deg-49%RH-air-DAS/0.txt", 0)
     #VAPOR_exhaled()
@@ -356,8 +419,8 @@ if __name__ == "__main__":
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",3)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/0.txt",0)
-    exp_plot()
-    
+    #exp_plot()
+    linear()
 
 
 
