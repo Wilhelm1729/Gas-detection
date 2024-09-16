@@ -1,5 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
+import math
 
 
 def get_xy(filename, column_index):
@@ -41,6 +42,7 @@ def plot_absorbtion(filename, ymaxrange, cutoff): #Hard coded for 50 000 data po
 
     quotient = []
     min = 2
+    min_index = 0
 
     for i in range(50000):
         initial = slope * i + intercept
@@ -49,22 +51,31 @@ def plot_absorbtion(filename, ymaxrange, cutoff): #Hard coded for 50 000 data po
         quotient.append(q)
         if q < min and i < cutoff:
             min = q
+            min_index = i
     
-    print(min)
+    r = 100 # Radien för värdena där standardavvikelsen räknas ut, 100 från inspektion av grafen
+
+    std = np.std(quotient[min_index-r:min_index+r])
+    mean = np.mean(quotient[min_index-r:min_index+r]) 
+
+    #Förut returnerades min instället för mean
+
+
+    #print(min)
 
     #plot data points
+    """
+    fig, axs = plt.subplots(2,1, figsize=(10, 10))
 
-    #fig, axs = plt.subplots(2,1, figsize=(10, 10))
+    axs[0].plot(x_values, y_values, linestyle='solid') 
+    axs[0].plot(regression_data_x_array, regression_line, 'r-', label=f'Regression Line: y = {slope:.2f}x + {intercept:.2f}')
 
-    #axs[0].plot(x_values, y_values, linestyle='solid') 
-    #axs[0].plot(regression_data_x_array, regression_line, 'r-', label=f'Regression Line: y = {slope:.2f}x + {intercept:.2f}')
+    axs[1].plot(x_values, quotient)
 
-    #axs[1].plot(x_values, quotient)
-
-    #plt.tight_layout()
-    #plt.show()
-    
-    return min
+    plt.tight_layout()
+    plt.show()
+    """
+    return (mean, std)
 
 
 def calculate_oxygen_concentration(V0, V, L, epsilon):
@@ -78,6 +89,18 @@ def calculate_oxygen_concentration(V0, V, L, epsilon):
     return C
 
 
+def calculate_oxygen_concentration_with_error(V, delta_V, L, delta_L, epsilon):
+    #delta_epsilon is assumed to be small
+
+    # Calculate concentration
+    C = -np.log(V) / (epsilon * L)
+
+    # Error
+    delta_C = ((1/(epsilon * L * V))**2*delta_V**2 + (np.log(V) / (epsilon * L**2))**2 * delta_L**2)**(1/2)
+
+    #Returns concentration (molecules per cubic centimeter)
+    return (C, delta_C)
+
 #V0_1, V_1 = plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/1.txt", 45000, 15000)
 #V0_2, V_2 = plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/1.txt", 45000, 15000)
 
@@ -86,20 +109,24 @@ def calculate_oxygen_concentration(V0, V, L, epsilon):
 #A_2 = plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/4.txt", 45000, 45000)
 
 
-
+"""
 sum_1 = 0
 sum_2 = 0
 for i in range(5):
-    sum_1  += plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
-    sum_2  += plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+    #sum_1  += plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+    #sum_2  += plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+    sum_1  += plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH/"+str(i)+".txt", 45000, 45000)
+    sum_2  += plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/"+str(i)+".txt", 45000, 45000)
+"""
+    
 
-A_1 = sum_1 / 5
-A_2 = sum_2 / 5
+#A_1 = sum_1 / 5
+#A_2 = sum_2 / 5
 
-print(A_1, A_2)
+#print(A_1, A_2)
 
-L = 400 #44.2 # cm
-A = 6.022 * 10**23
+#L = 44 #L = 400 #44.2 # cm
+#A = 6.022 * 10**23
 #e = 4.9082 * 10**-23 #absorption coefficient for w=761.12
 #e = 4.6301 * 10**-23 #absorption coefficient for w = 761.0
 
@@ -113,6 +140,9 @@ abs_coeff = [5.1248646136058054e-23, 4.4441924337452004e-23, 5.616444626627102e-
 
 #index 4 5 are the right abs coeff
 
+#print(abs_coeff[4],abs_coeff[5])
+
+"""
 for i in range(len(abs_coeff)-1):
     if i % 2 == 1:
         continue
@@ -126,6 +156,61 @@ for i in range(len(abs_coeff)-1):
     print(i, i+1)
     print(c_1, c_2, c_1/c_2)
 
+
+"""
+
+def calculate_oxygen_level():
+    """
+        Calculates the oxygen concentration and error using the "error" (noise) on
+        the graph and the error in the path length
+    """
+    mean_sum_1 = 0
+    mean_sum_2 = 0
+    std_sum_1 = 0
+    std_sum_2 = 0
+    for i in range(5):
+        #sum_1  += plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+        #sum_2  += plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+
+        # ta bort -air-DAS, och ändra L till 44 cm för att få de första mätningarna
+        (val_1, std_1) = plot_absorbtion("O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+        (val_2, std_2) = plot_absorbtion("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/"+str(i)+".txt", 45000, 45000)
+
+        mean_sum_1  += val_1
+        mean_sum_2  += val_2
+        std_sum_1  += std_1**2
+        std_sum_2  += std_2**2
+
+    A_1 = mean_sum_1 / 5
+    A_2 = mean_sum_2 / 5
+    S_1 = std_sum_1**(1/2) / 5
+    S_2 = std_sum_1**(1/2) / 5
+
+    print(A_1, A_2, S_1, S_2)
+
+    L = 450 #L = 400 #44.2 # cm
+    delta_L = 20
+    A = 6.022 * 10**23
+
+    (c_1, e_1) = calculate_oxygen_concentration_with_error(A_2, S_2, L, delta_L, abs_coeff[4]*A)
+    (c_2, e_2) = calculate_oxygen_concentration_with_error(A_1, S_1, L, delta_L, abs_coeff[5]*A)
+
+
+    c_pure = 101000 * 0.01**3 / 8.314 / 300
+
+    #print(c_1, c_2, c_1/c_2)
+
+    c = (c_1 + c_2) / 2
+    e = (e_1**2 + e_2**2)**(1/2)/2
+
+    print(c, e)
+
+    print(c_2/c_pure*100,e_2/c_pure*100)
+
+
+
+
+calculate_oxygen_level()
 
 """
 
