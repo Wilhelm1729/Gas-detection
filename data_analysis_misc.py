@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
+from matplotlib.ticker import FormatStrFormatter
 
 
 def open_and_plot(filename, column_index):
@@ -327,7 +327,7 @@ def CH4_exhaled():
     """
 
     print("CH4 concentration in air (ppm)", cair, caire)
-    print("CH4 Exhaled by martin (ppm)", me, cme)
+    print("CH4 Exhaled by martin (ppm)", cm, cme)
 
 
 
@@ -353,6 +353,7 @@ def VAPOR_exhaled():
     cal_conc = swp * RH
     cal_conc_error = ((swp * dRH)**2 + (swp_e * RH)**2)**(1/2)
 
+    print("TEST",cal_conc, cal_conc_error)
 
     """
     RH 77%
@@ -393,7 +394,7 @@ def exp_plot():
 
     #f1 = "Plot/CO2-120mA-10000omega-23.1deg-49%RH-air/0.txt"
     #f2 = "Plot/CO2-120mA-10000omega-23.1deg-49%RH-air-A0.05/0.txt"
-    
+
     f1 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH/4.txt"
     f2 = "O2_DAS/O2-40mA-8008omega-23.1deg-49%RH-5000Hz-0.022A/0.txt"
     
@@ -404,21 +405,36 @@ def exp_plot():
 
     fig, axs = plt.subplots(1,3, figsize=(15, 5))
 
+    
+
+    fs_label = 16
+    fs_title = 18
+
+    fs_ticks = 10
+
     axs[0].plot(x1,y1)
-    axs[0].set_title("Sawtooth")
-    axs[0].set_ylabel("Voltage from detector [V]")
-    axs[0].set_xlabel("Sample points")
+    axs[0].set_title("Sawtooth",fontsize=fs_title)
+    axs[0].set_ylabel("Voltage from detector [V]",fontsize=fs_label)
+    axs[0].set_xlabel("Sample points",fontsize=fs_label)
+    axs[0].set_xticklabels(axs[0].get_xticks(), fontsize=fs_ticks)
+    axs[0].set_yticklabels(axs[0].get_yticks(), fontsize=fs_ticks)
 
     axs[1].plot(x2,y2)
-    axs[1].set_title("With modulation")
-    axs[1].set_ylabel("Voltage from detector [V]")
-    axs[1].set_xlabel("Sample points")
+    axs[1].set_title("With modulation",fontsize=fs_title)
+    axs[1].set_ylabel("Voltage from detector [V]",fontsize=fs_label)
+    axs[1].set_xlabel("Sample points",fontsize=fs_label)
+    axs[1].set_xticklabels(axs[1].get_xticks(), fontsize=fs_ticks)
+    axs[1].set_yticklabels(axs[1].get_yticks(), fontsize=fs_ticks)
 
     axs[2].plot(x3,y3)
-    axs[2].set_title("Lock-in amplifier")
-    axs[2].set_xlabel("Sample points")
+    axs[2].set_title("Lock-in amplifier",fontsize=fs_title)
+    axs[2].set_ylabel("Output amplitude",fontsize=fs_label)
+    axs[2].set_xlabel("Sample points",fontsize=fs_label)
+    axs[2].set_xticklabels(axs[2].get_xticks(), fontsize=fs_ticks)
+    axs[2].set_yticklabels(axs[2].get_yticks(), fontsize=fs_ticks)
     
     plt.tight_layout()
+    plt.savefig("sample_experiment.png")
     plt.show()
 
     """
@@ -507,17 +523,17 @@ def linear():
 
 if __name__ == "__main__":
     #open_and_plot("O2-40mA-8008omega-23.1deg-49%RH-air-DAS/0.txt", 0)
-    VAPOR_exhaled()
-    CO2_conc_in_air()
-    CO2_exhale()
-    CH4_exhaled()
-    O2_exhaled()
+    #VAPOR_exhaled()
+    #CO2_conc_in_air()
+    #CO2_exhale()
+    #CH4_exhaled()
+    #O2_exhaled()
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",0)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air/0.txt",3)
     #open_and_plot("O2_DAS/O2-31.6mA-8008omega-23.1deg-49%RH-air-DAS/0.txt",0)
-    #exp_plot()
+    exp_plot()
     #linear()
 
 

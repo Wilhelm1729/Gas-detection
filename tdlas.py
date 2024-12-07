@@ -122,7 +122,8 @@ def wavelength_modulation():
     temperature = 30.13 #from omega = 8008
 
     # Sawtooth wave
-    t = np.linspace(0,1,50000)
+    sample_rate = 50000
+    t = np.linspace(0,1,sample_rate)
 
     voltage_signal = sawtooth_amp * (1 + scipy.signal.sawtooth(2 * np.pi * t * sawtooth_freq))
     modulating_voltage = modulation_amplitude * np.sin(2 * np.pi * modulation_frequency * t)
@@ -153,39 +154,52 @@ def wavelength_modulation():
 
     #signal1_sin = v1 * np.sin(2 * np.pi * reference_frequency * t)
     
-    filtered_signal_cos = lowpass_filter(signal_cos)
-    filtered_signal_sin = lowpass_filter(signal_sin)
+    filtered_signal_cos = lowpass_filter(signal_cos, sample_rate)
+    filtered_signal_sin = lowpass_filter(signal_sin, sample_rate)
 
     filtered_signal = np.sqrt(filtered_signal_cos**2+filtered_signal_sin**2)
     #filtered_signal1 = lowpass_filter(np.sqrt(signal1**2+signal1_sin**2))
 
     fig, axs = plt.subplots(1,3, figsize=(15, 5))
 
+    fs_label = 16
+    fs_title = 18
+
+    fs_ticks = 16
+
     #axs[0].plot(t, w)
     axs[0].plot(t, v0)
-    axs[0].set_title("Sawtooth")
-    axs[0].set_ylabel("Voltage from detector")
-    axs[0].set_xlabel("Time")
+    axs[0].set_title("Sawtooth",fontsize=fs_title)
+    axs[0].set_ylabel("Voltage from detector",fontsize=fs_label)
+    axs[0].set_xlabel("Time",fontsize=fs_label)
+    axs[0].set_xticklabels(axs[0].get_xticks(), fontsize=fs_ticks)
+    axs[0].set_yticklabels(axs[0].get_yticks(), fontsize=fs_ticks)
+
 
     axs[1].plot(t, v1)
-    axs[1].set_title("With modulation")
-    axs[1].set_ylabel("Voltage from detector")
-    axs[1].set_xlabel("Time")
+    axs[1].set_title("With modulation",fontsize=fs_title)
+    axs[1].set_ylabel("Voltage from detector",fontsize=fs_label)
+    axs[1].set_xlabel("Time",fontsize=fs_label)
+    axs[1].set_xticklabels(axs[1].get_xticks(), fontsize=fs_ticks)
+    axs[1].set_yticklabels(axs[1].get_yticks(), fontsize=fs_ticks)
     #axs[0,0].set_ylim(6,10)
 
     axs[2].plot(t, filtered_signal)
-    axs[2].set_title("Lock-in amplifier")
-    axs[2].set_xlabel("Time")
+    axs[2].set_title("Lock-in amplifier",fontsize=fs_title)
+    axs[2].set_ylabel("Output amplitude",fontsize=fs_label)
+    axs[2].set_xlabel("Time",fontsize=fs_label)
+    axs[2].set_xticklabels(axs[2].get_xticks(), fontsize=fs_ticks)
+    axs[2].set_yticklabels(axs[2].get_yticks(), fontsize=fs_ticks)
 
     plt.tight_layout()
+    plt.savefig("simulation_sample.png")
     plt.show()
     
 
-def lowpass_filter(signal):
+def lowpass_filter(signal, sampling_rate):
     """A lowpass filter"""
     freq_cutoff_p = 30
     freq_cutoff_s = 100
-    sampling_rate = 50000
 
     rp = 3
     rs = 64
@@ -207,11 +221,14 @@ def plot_absortion_coefficient(l_min, l_max):
     """
     #l = np.linspace(750,770)
     #i = gas_absorption(l, path_length, concentration)
-    l = np.linspace(l_min, l_max, 1000)
+    l = np.linspace(l_min, l_max, 10000)
 
     e = get_absorption_coefficient(l)
     
     plt.plot(l,e)
+    plt.title("Absorption coefficient for oxygen")
+    plt.ylabel("Abs. coeff. [cm^2/mol]")
+    plt.xlabel("Wavelength [nm]")    
     plt.show()
 
     centers = [760.45, 760.58, 760.65, 760.75, 760.9, 761.0, 761.12, 761.25, 761.4, 761.55]
@@ -255,7 +272,7 @@ def plot_absortion_coefficient(l_min, l_max):
 
 
 def main():
-    #plot_absortion_coefficient(760,762)
+    #plot_absortion_coefficient(700,1000)
     #direct_absorption()
     wavelength_modulation()
 
